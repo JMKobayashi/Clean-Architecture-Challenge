@@ -1,4 +1,4 @@
-module github.com/JMKobayashi/Clean-Architeture-Challenge
+module github.com/JMKobayashi/Clean-Architecture-Challenge
 
 go 1.19
 
