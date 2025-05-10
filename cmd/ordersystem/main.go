@@ -23,6 +23,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+//go:generate wire
+
 func main() {
 	configs, err := configs.LoadConfig(".")
 	if err != nil {
@@ -43,15 +45,17 @@ func main() {
 	})
 
 	createOrderUseCase := NewCreateOrderUseCase(db, eventDispatcher)
+	listOrdersUseCase := NewListOrdersUseCase(db)
 
 	webserver := webserver.NewWebServer(configs.WebServerPort)
 	webOrderHandler := NewWebOrderHandler(db, eventDispatcher)
 	webserver.AddHandler("/order", webOrderHandler.Create)
+	webserver.AddHandler("/order/list", webOrderHandler.List)
 	fmt.Println("Starting web server on port", configs.WebServerPort)
 	go webserver.Start()
 
 	grpcServer := grpc.NewServer()
-	createOrderService := service.NewOrderService(*createOrderUseCase)
+	createOrderService := service.NewOrderService(*createOrderUseCase, *listOrdersUseCase)
 	pb.RegisterOrderServiceServer(grpcServer, createOrderService)
 	reflection.Register(grpcServer)
 
@@ -63,7 +67,8 @@ func main() {
 	go grpcServer.Serve(lis)
 
 	srv := graphql_handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
-		CreateOrderUseCase: *createOrderUseCase,
+		CreateOrderUseCase: createOrderUseCase,
+		ListOrdersUseCase:  listOrdersUseCase,
 	}}))
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)

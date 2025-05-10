@@ -1,0 +1,35 @@
+### Create Order (REST)
+POST http://localhost:8000/order
+Content-Type: application/json
+
+{
+    "id": "123",
+    "price": 100.0,
+    "tax": 10.0
+}
+
+### List Orders (REST)
+GET http://localhost:8000/order/list
+
+### Create Order (GraphQL)
+POST http://localhost:8080/query
+Content-Type: application/json
+
+{
+    "query": "mutation { createOrder(input: { id: \"123\", Price: 100.0, Tax: 10.0 }) { id Price Tax FinalPrice } }"
+}
+
+### List Orders (GraphQL)
+POST http://localhost:8080/query
+Content-Type: application/json
+
+{
+    "query": "query { listOrders { id Price Tax FinalPrice } }"
+}
+
+### gRPC requests can be tested using grpcurl:
+# List Orders:
+# grpcurl -plaintext localhost:50051 pb.OrderService/ListOrders
+#
+# Create Order:
+# grpcurl -plaintext -d '{"id": "123", "price": 100.0, "tax": 10.0}' localhost:50051 pb.OrderService/CreateOrder 
